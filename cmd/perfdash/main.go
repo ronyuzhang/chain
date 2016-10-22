@@ -1,9 +1,10 @@
 package main
 
 import (
-	"html/template"
 	"log"
 	"net/http"
+	"os"
+	"time"
 
 	"chain/env"
 )
@@ -13,59 +14,43 @@ var (
 	baseURL = env.String("BASE_URL", "http://localhost:1999/")
 )
 
+var sizes = []time.Duration{
+	time.Minute, // first size must == bucket size
+	time.Hour,   // each size must be an integral multiple of previous
+	24 * time.Hour,
+}
+
 func main() {
 	env.Parse()
+
+	if len(os.Args) > 1 && os.Args[1] == "cron" {
+		cron()
+		return
+	}
+
 	http.HandleFunc("/", index)
 	http.HandleFunc("/histogram.png", histogram)
 	log.Fatalln(http.ListenAndServe(*addr, nil))
 }
 
-var tmpl = template.Must(template.New("index.html").Parse(indexHTML))
-
-func index(w http.ResponseWriter, req *http.Request) {
-	if req.URL.Path != "/" {
-		http.NotFound(w, req)
-		return
-	}
-
-	var v struct {
-		DebugVars *debugVars
-		ID        int
-	}
-
-	u := req.URL.Query().Get("baseurl")
-	if u == "" {
-		u = *baseURL
-	}
-
-	user, pass, _ := req.BasicAuth()
-
-	var err error
-	v.ID, v.DebugVars, err = fetchDebugVars(u, user, pass)
-	if err == errAuth {
-		w.Header().Set("WWW-Authenticate", `Basic realm="perfdash"`)
-		http.Error(w, "auth pls", 401)
-		return
-	} else if err != nil {
-		http.Error(w, err.Error(), 500)
-		log.Println(err)
-		return
-	}
-
-	err = tmpl.Execute(w, v)
-	if err != nil {
-		log.Println(err)
+func cron() {
+	for t := range time.Tick(period) {
+		rotateSchema(t)
+		fetchMetrics()
 	}
 }
 
-const indexHTML = `
-<h1>perfdash</h1>
-Open dev tools to see the full /debug/vars data.
-{{$id := .ID}}
-{{range $k, $v := .DebugVars.Latency}}
-	<img src="/histogram.png?name={{$k}}&id={{$id}}">
-{{end}}
-<script>
-console.log("/debug/vars", {{.DebugVars.Raw}});
-</script>
-`
+func rotateSchema(t time.Time) {
+	for _, size := range sizes {
+		rotateSchemaSize(t, size)
+	}
+}
+
+func rotateSchemaSize(t time.Time, size time.Duration) {
+	var zero time.Time
+	if t.Sub(zero)%size == 0 {
+	}
+}
+
+func fetchMetrics() {
+}
