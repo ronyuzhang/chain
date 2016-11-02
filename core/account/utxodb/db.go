@@ -70,7 +70,7 @@ func (res *DBReserver) ReserveUTXO(ctx context.Context, txHash bc.Hash, pos uint
 		alreadyExisted bool
 		utxoExists     bool
 	)
-	err = res.DB.QueryRow(ctx, reserveQ, txHash, pos, exp, clientToken).Scan(
+	err := res.DB.QueryRow(ctx, reserveQ, txHash, pos, exp, clientToken).Scan(
 		&reservationID,
 		&alreadyExisted,
 		&utxoExists,
@@ -164,7 +164,7 @@ func (res *DBReserver) Reserve(ctx context.Context, source Source, exp time.Time
 	//  * already_existed will be TRUE
 	//  * existing_change will be the change value for the existing
 	//    reservation row.
-	err = res.DB.QueryRow(ctx, reserveQ, source.AssetID, source.AccountID, txHash, outIndex, source.Amount, exp, source.ClientToken).Scan(
+	err := res.DB.QueryRow(ctx, reserveQ, source.AssetID, source.AccountID, txHash, outIndex, source.Amount, exp, source.ClientToken).Scan(
 		&reservationID,
 		&alreadyExisted,
 		&existingChange,
@@ -212,7 +212,7 @@ func (res *DBReserver) Reserve(ctx context.Context, source Source, exp time.Time
 		return reservationID, nil, 0, errors.Wrap(err, "query reservation members")
 	}
 
-	if source.Amount+change.Amount != utxoTotal {
+	if source.Amount+change != utxoTotal {
 		return reservationID, nil, change, fmt.Errorf("lost a reservation race")
 	}
 
