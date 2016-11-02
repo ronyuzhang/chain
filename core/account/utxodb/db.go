@@ -4,7 +4,6 @@ package utxodb
 import (
 	"context"
 	stdsql "database/sql"
-	"fmt"
 	"time"
 
 	"chain/database/pg"
@@ -213,7 +212,9 @@ func (res *DBReserver) Reserve(ctx context.Context, source Source, exp time.Time
 	}
 
 	if source.Amount+change != utxoTotal {
-		return reservationID, nil, change, fmt.Errorf("lost a reservation race")
+		// Lost a reservation race with another thread somewhere. Reuse
+		// ErrReserved to encourage callers to retry.
+		return reservationID, nil, change, ErrReserved
 	}
 
 	return reservationID, reserved, change, nil
