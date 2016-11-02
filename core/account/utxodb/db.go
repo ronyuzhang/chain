@@ -69,8 +69,7 @@ func (res *DBReserver) ReserveUTXO(ctx context.Context, txHash bc.Hash, pos uint
 			SELECT a.account_id, a.asset_id, a.amount, a.control_program_index, a.control_program
 			FROM account_utxos a, reservation_utxos r
 			WHERE r.reservation_id = $1
-				AND a.tx_hash = r.tx_hash
-				AND a.index = r.index
+				AND (a.tx_hash, a.index) = (r.tx_hash, r.index)
 			LIMIT 1
 		`
 	)
@@ -143,8 +142,7 @@ func (res *DBReserver) Reserve(ctx context.Context, source Source, exp time.Time
 			SELECT a.tx_hash, a.index, a.amount, a.control_program_index, a.control_program
 			FROM account_utxos a, reservation_utxos r
 			WHERE r.reservation_id = $1
-				AND a.tx_hash = r.tx_hash
-				AND a.index = r.index
+				AND (a.tx_hash, a.index) = (r.tx_hash, r.index)
 		`
 	)
 

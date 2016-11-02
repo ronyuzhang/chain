@@ -100,12 +100,6 @@ func (m *Manager) indexAccountUTXOs(ctx context.Context, b *bc.Block) error {
 		return errors.Wrap(err, "loading account info from control programs")
 	}
 
-	dbtx, err := m.db.Begin(ctx)
-	if err != nil {
-		return errors.Wrap(err, "begin transaction for canceling utxo reservation")
-	}
-	defer dbtx.Rollback(ctx)
-
 	err = m.upsertConfirmedAccountOutputs(ctx, accOuts, blockPositions, b)
 	if err != nil {
 		return errors.Wrap(err, "upserting confirmed account utxos")
