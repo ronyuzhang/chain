@@ -1,8 +1,7 @@
 CREATE TABLE hdrhistogram (
-	cluster text NOT NULL,
-	process text NOT NULL,
 	t timestamptz NOT NULL,
 	metric text NOT NULL,
+	labels json NOT NULL, -- constrained to map[string]string
 
 	min bigint NOT NULL,
 	max bigint NOT NULL,
